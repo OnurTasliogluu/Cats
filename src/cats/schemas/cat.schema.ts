@@ -9,10 +9,16 @@ export class Cat {
   name: string;
 
   @Prop({ required: true })
-  age: number;
+  type: string;
 
-  @Prop({ required: true })
-  breed: string;
+  @Prop({ type: [String], required: true })
+  food: string[];
+
+  @Prop({ type: [String], required: true })
+  chronicHealthIssues: string[];
+
+  @Prop({ required: false })
+  age?: number;
 }
 
 export const CatSchema = SchemaFactory.createForClass(Cat);
