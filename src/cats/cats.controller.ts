@@ -1,53 +1,43 @@
-import { Controller, Get, Post, Body, Param, Put, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Put, Delete, Logger } from '@nestjs/common';
 import { CatsService } from './cats.service';
 import { CreateCatDto } from './dto/create-cat.dto';
 import { UpdateCatDto } from './dto/update-cat.dto';
-import { Cat } from './entities/cat.entity';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('cats')
 @Controller('cats')
 export class CatsController {
+  private readonly logger = new Logger(CatsController.name); // Create a logger for the controller
+
   constructor(private readonly catsService: CatsService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new cat' })
-  @ApiResponse({ status: 201, description: 'The cat has been created.', type: Cat })
-  create(@Body() createCatDto: CreateCatDto): Cat {
+  create(@Body() createCatDto: CreateCatDto) {
+    this.logger.log('Creating a new cat'); // Log the event
     return this.catsService.create(createCatDto);
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all cats' })
-  @ApiResponse({ status: 200, description: 'List of all cats.', type: [Cat] })
-  findAll(): Cat[] {
+  findAll() {
+    this.logger.log('Fetching all cats'); // Log the event
     return this.catsService.findAll();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a cat by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'The ID of the cat' })
-  @ApiResponse({ status: 200, description: 'The found cat', type: Cat })
-  @ApiResponse({ status: 404, description: 'Cat not found' })
-  findOne(@Param('id') id: string): Cat {
+  findOne(@Param('id') id: string) {
+    this.logger.log(`Fetching cat with ID: ${id}`); // Log the event
     return this.catsService.findOne(id);
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update a cat by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'The ID of the cat to update' })
-  @ApiResponse({ status: 200, description: 'The cat has been updated.', type: Cat })
-  @ApiResponse({ status: 404, description: 'Cat not found' })
-  update(@Param('id') id: string, @Body() updateCatDto: UpdateCatDto): Cat {
+  update(@Param('id') id: string, @Body() updateCatDto: UpdateCatDto) {
+    this.logger.log(`Updating cat with ID: ${id}`); // Log the event
     return this.catsService.update(id, updateCatDto);
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a cat by ID' })
-  @ApiParam({ name: 'id', type: String, description: 'The ID of the cat to delete' })
-  @ApiResponse({ status: 200, description: 'The cat has been deleted.' })
-  @ApiResponse({ status: 404, description: 'Cat not found' })
-  remove(@Param('id') id: string): void {
-    this.catsService.remove(id);
+  remove(@Param('id') id: string) {
+    this.logger.warn(`Deleting cat with ID: ${id}`); // Log a warning
+    return this.catsService.remove(id);
   }
 }
