@@ -2,17 +2,28 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const logger = new Logger('Bootstrap'); // Create a logger instance for the bootstrap process
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService); // Access ConfigService for environment variables
+  const logger = new Logger('Bootstrap');
 
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }));
+  // Enable global validation pipe
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
+  // Enable CORS
+  app.enableCors({
+    origin: configService.get<string>('CORS_ORIGIN') || '*', // Allow specified origins
+  });
+
+  // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Cat API')
     .setDescription('The Cat API allows you to manage cats')
@@ -22,10 +33,12 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
 
-  const port = 3000;
-  await app.listen(port);
+  // Dynamic port and environment
+  const port = configService.get<number>('PORT') || 3000;
+  const env = configService.get<string>('NODE_ENV') || 'development';
 
-  logger.log(`Application is running on: http://localhost:${port}`);
+  await app.listen(port);
+  logger.log(`Application is running in ${env} mode on: http://localhost:${port}`);
 }
 
 bootstrap();
