@@ -1,21 +1,23 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
-import { ValidationPipe, Logger } from '@nestjs/common';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter'; // Import your filter
 import { ConfigService } from '@nestjs/config';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configService = app.get(ConfigService);
-  const logger = new Logger('Bootstrap');
 
-  // Enable global validation pipe
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
-      transform: true,
+  // Enable Helmet for security
+  app.use(helmet());
+
+  // Enable rate limiting
+  app.use(
+    rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // limit each IP to 100 requests per windowMs
     }),
   );
 
@@ -42,7 +44,5 @@ async function bootstrap() {
   const env = configService.get<string>('NODE_ENV') || 'development';
 
   await app.listen(port);
-  logger.log(`Application is running in ${env} mode on: http://localhost:${port}`);
 }
-
 bootstrap();
